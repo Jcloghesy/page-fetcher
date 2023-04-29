@@ -1,0 +1,43 @@
+/** ******** File to Hold (Page-)Fetcher Functionality - fetcher.js ******** 
+ *  
+ *  ** **** `fetcher` function **** **
+ *   - Function that makes an http request and listens for a response
+ *   - Once response (data) is received, it is written to local filesystem
+ */
+
+/*** declares varabiles -> request and fs 
+ *   declares function with two arguments url & path 
+ */
+const request = require("request");
+const fs = require("fs");
+
+const [url, path] = process.argv.slice(2);
+
+/** Check if file already exists at the specified path */
+if (fs.existsSync(path)) {
+  console.log(
+    `Error: A file already exists at ${path}. \n
+     Please provide a different path.`
+  );
+  return;
+}
+
+/** Make a request to the specified URL 
+ * handle error with logged message 
+ * Write the response body to a file at the specified path  
+ * Upon download - notify user by logging message & include file size*/
+request(url, (error, response, body) => {
+  if (error || response.statusCode < 200 || response.statusCode > 299) {
+    console.log(`Failed to fetch ${url}. Status code: ${response.statusCode}`);
+    return;
+  }
+  
+  fs.writeFile(path, body, (error) => {
+    if (error) {
+      console.log(`Error writing file to ${path}: ${error.message}`);
+      return;
+    }
+    const fileSize = Buffer.byteLength(body);
+    console.log(`Downloaded and saved ${fileSize} bytes to ${path}`);
+  });
+});
